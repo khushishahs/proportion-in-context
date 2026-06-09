@@ -1,0 +1,510 @@
+---
+title: "mfk3 stim list"
+author: "A.S."
+date: "2025-12-16"
+output: pdf_document
+---
+This notebook is to create the stimulus list for MFK-3
+
+# Load packages.
+```{r}
+library(tidyverse)
+library(readxl)
+library(dplyr)
+library(jsonlite)
+```
+
+## Restrictions & Parameters
+
+## Creating every possible combination of set1 (numerator) and set2 (non-numerator) for the 1st proportion using 1 through 17 (min and max number of dots in any subset). Filtering out where the total number of dots is more than 18
+```{r make left stims}
+rm(list = ls())
+
+set1 <- c(1:17)
+left_stims <- tibble(l_set1 = numeric(),
+                    l_set2= numeric())
+
+for (s in 1:length(set1)) {
+  
+  temp <- tibble(l_set1 = c(1:17), l_set2 = set1[s])
+  
+  left_stims <- bind_rows(left_stims, temp)
+  
+}
+
+left_stims <- left_stims  |> 
+  filter(l_set1 + l_set2 <= 18 & l_set1 + l_set2 >= 3)
+
+left_stims
+```
+
+## Adding every combination of numerator and non-numerator components for the 2nd (right side) proportion. Then make every possible combination of 1st and 2nd proportions.
+```{r produce right stims and combine with left ones}
+trials <- c()
+
+for (r1 in 1:length(set1)) {
+  
+  for (r2 in 1:length(set1)) {
+    temp <- left_stims |>
+    mutate(r_set1 = set1[r1],
+           r_set2 = set1[r2])
+    
+    trials <- bind_rows(trials, temp)
+  }
+}
+
+trials <- trials |>
+  filter(r_set1 + r_set2 <= 18 & r_set1 + r_set2 >= 3)
+
+trials
+```
+
+## Here we're doing a few things at once. 
+We calculate the proportions for both stimuli in a trial (combination of two proportions).
+Then we determine which of the two proportions is larger, and which has the larger numerator.
+Then we calculate the ratio of the numerators and the ratio of the proportions.
+We then designate the trials as numerator congruent, neutral, or incongruent. 
+We then tag trials as crossing the half boundary (when the two proportions are on opposite sides of the half boundary) or not.
+Then we filter out trials where the proportions do not differ, where the ratio of proportions falls outside of our desired range, and where the ratio of numerators falls outside the desired range of numerator ratios.
+
+```{r}
+trial_info <- trials |>
+  mutate(prop_l = l_set1/(l_set1 + l_set2),
+         prop_r = r_set1/(r_set1 + r_set2),
+         
+         larger_prop = case_when(prop_l > prop_r ~ "left",
+                                 prop_r > prop_l ~ "right",
+                                 prop_l == prop_r ~ "same"),
+         
+         larger_num = case_when(l_set1 > r_set1 ~ "left",
+                                r_set1 > l_set1 ~ "right",
+                                l_set1 == r_set1 ~ "same"),
+         
+         ratio_nums = case_when(larger_num == "left" ~ l_set1/r_set1,
+                                larger_num == "right" ~ r_set1/l_set1,
+                                larger_num == "same" ~ l_set1/r_set1),
+         
+         ratio_props = case_when(larger_prop == "left" ~ prop_l/prop_r,
+                                larger_prop == "right" ~ prop_r/prop_l,
+                                larger_prop == "same" ~ prop_l/prop_r),
+         
+         num_congru = case_when(larger_num == "same" ~ "neutral",
+                                larger_prop == larger_num ~ "congru",
+                                larger_prop != larger_num ~ "incongru"),
+         
+         half = case_when(prop_l >= .5 & prop_r <= .5 ~ "opposite",
+                          prop_l <= .5 & prop_r >= .5 ~ "opposite",
+                          TRUE ~ "same")) |> 
+  
+  filter(larger_prop != "same" & ratio_props != 1) |>
+  filter(num_congru != "neutral") |> 
+  filter((ratio_props >= 2 & ratio_props <= 3) & (ratio_nums >= 1 & ratio_nums <= 2.25))
+
+trial_info
+```
+
+## Binning
+
+Adding the bin labels. The first bin goes from 2 inclusive to 2.25 inclusive, then 2.25 non-inclusive to 2.5 inclusive.
+
+```{r}
+bins <- c(1.99, 2.25, 2.5, 2.75, 3)
+
+bin_labels <- c("2_2.25", "2.25_2.5", "2.5_2.75", "2.75_3")
+
+binning <- trial_info |>
+  mutate(ratio_prop_bins = cut(ratio_props,
+                               breaks = bins,
+                               labels = bin_labels,
+                               include.lowest = FALSE)) |>
+  distinct()
+
+binning |> 
+  group_by(ratio_prop_bins) |> 
+  summarise(n = n())
+```
+
+
+```{r}
+binning |> 
+  filter(num_congru != "neutral") |> 
+  group_by(ratio_prop_bins, num_congru, half) |> 
+  summarise(n = n())
+
+binning |> 
+  filter(num_congru != "neutral" & num_congru == "incongru" & half == "same" & ratio_prop_bins == "2.5_2.75") 
+```
+
+Subset n rows from each combination of bin, num congruency, and crossing half boundary.
+```{r sample the trials}
+stim_list <- binning |> 
+  group_by(ratio_prop_bins, num_congru, half) |> 
+  slice_sample(n = 1, replace = FALSE) |> 
+  mutate(left_stim = paste(l_set1, l_set2, sep = "_"),
+         right_stim = paste(r_set1, r_set2, sep = "_")) |>
+  pivot_longer(cols = left_stim:right_stim, names_to = "l_r", values_to = "stim")
+```
+
+Mark repeat stimuli. The first instance of a stimulus is marked "a", the second "b" (if there is one), and so on to "e". The sampling function in the last chunk rarely produces stimuli that repeat more than 4 or 5 times.
+```{r mark repeats}
+ver_mark <- c("a", "b", "c", "d", "e")
+
+stim_list <- stim_list |> 
+  as.data.frame() |>
+  mutate(stim_version = duplicated(stim),
+         stim_version = if_else(stim_version == FALSE, ver_mark[1], stim),
+         dupes = duplicated(stim_version, incomparables = ver_mark),
+         stim_version = case_when(
+           dupes == FALSE & stim_version == stim ~ ver_mark[2],
+           dupes == TRUE & stim_version == stim ~ stim,
+           .default = stim_version),
+         dupes = duplicated(stim_version, incomparables = ver_mark),
+         stim_version = case_when(
+           dupes == FALSE & stim_version == stim ~ ver_mark[3],
+           dupes == TRUE & stim_version == stim ~ stim,
+           .default = stim_version),
+         dupes = duplicated(stim_version, incomparables = ver_mark),
+         stim_version = case_when(
+           dupes == FALSE & stim_version == stim ~ ver_mark[4],
+           dupes == TRUE & stim_version == stim ~ stim,
+           .default = stim_version),
+         dupes = duplicated(stim_version, incomparables = ver_mark),
+         stim_version = case_when(
+           dupes == FALSE & stim_version == stim ~ ver_mark[5],
+           dupes == TRUE & stim_version == stim ~ stim,
+           .default = stim_version)) |> 
+    select(-c(dupes))
+
+# The max number of instances: how many iterations needed?
+print(paste("The max number of iterations is: ", max(table(stim_list$stim))))
+# how many iterations tracked? Make sure we got them all. 
+# (a for 1, b for 2, ...). 
+# If this doesn't match previous output, need to add more iterations.
+unique(stim_list$stim_version)
+
+# see how many repeats we have
+# a corresponds to no repeats, b to 1 repeat, and so on.
+table(stim_list$stim_version)
+```
+
+
+```{r mark repeats}
+# pivot wider again
+stim_list <- stim_list |> 
+  # select(-stim_version) |> 
+  pivot_wider(names_from = l_r, values_from = stim)
+```
+
+# checking features of possible stims
+```{r}
+stim_list |> 
+  mutate(half = case_when(prop_l >= .5 & prop_r <= .5 ~ "opposite",
+                          prop_l <= .5 & prop_r >= .5 ~ "opposite",
+                          TRUE ~ "same")) |>
+  group_by(num_congru) |> 
+  summarise(min_ratio_num = min(ratio_nums),
+            max_ratio_num = max(ratio_nums),
+            mean_ratio_num = mean(ratio_nums),
+            min_ratio_prop = min(ratio_props),
+            max_ratio_prop = max(ratio_props),
+            mean_ratio_prop = mean(ratio_props),
+            n_same_half = sum(half == "same"),
+            n_opp_half = sum(half == "opposite"))
+```
+
+
+```{r}
+# output stimlist csv
+# comment out after making stim list
+# stim_list |>
+#   write_csv("trials_list_mfk3.csv")
+```
+
+# Practice
+```{r}
+prac_trial_info <- trials |>
+  mutate(prop_l = l_set1/(l_set1 + l_set2),
+         prop_r = r_set1/(r_set1 + r_set2),
+         
+         larger_prop = case_when(prop_l > prop_r ~ "left",
+                                 prop_r > prop_l ~ "right",
+                                 prop_l == prop_r ~ "same"),
+         
+         larger_num = case_when(l_set1 > r_set1 ~ "left",
+                                r_set1 > l_set1 ~ "right",
+                                l_set1 == r_set1 ~ "same"),
+         
+         ratio_nums = case_when(larger_num == "left" ~ l_set1/r_set1,
+                                larger_num == "right" ~ r_set1/l_set1,
+                                larger_num == "same" ~ l_set1/r_set1),
+         
+         ratio_props = case_when(larger_prop == "left" ~ prop_l/prop_r,
+                                larger_prop == "right" ~ prop_r/prop_l,
+                                larger_prop == "same" ~ prop_l/prop_r),
+         
+         num_congru = case_when(larger_num == "same" ~ "neutral",
+                                larger_prop == larger_num ~ "congru",
+                                larger_prop != larger_num ~ "incongru"),
+         
+         half = case_when(prop_l >= .5 & prop_r <= .5 ~ "opposite",
+                          prop_l <= .5 & prop_r >= .5 ~ "opposite",
+                          TRUE ~ "same")) |> 
+  
+  filter(larger_prop != "same" & ratio_props != 1) |>
+  filter(num_congru != "neutral") |> 
+  filter((ratio_props >= 2 & ratio_props <= 6) & (ratio_nums >= 1 & ratio_nums <= 2.25))
+
+prac_trial_info
+```
+
+```{r}
+prac_bins <- c(1.99, 3, 4, 5, 6)
+
+prac_bin_labels <- c("2_3", "3_4", "4_5", "5_6")
+
+prac_binning <- prac_trial_info |>
+  mutate(ratio_prop_bins = cut(ratio_props,
+                               breaks = prac_bins,
+                               labels = prac_bin_labels,
+                               include.lowest = FALSE)) |>
+  distinct()
+
+prac_binning |> 
+  group_by(ratio_prop_bins) |> 
+  summarise(n = n())
+```
+
+```{r}
+prac_binning |> 
+  group_by(ratio_prop_bins, num_congru, half) |> 
+  summarise(n = n())
+```
+
+```{r}
+final_prac <- read_csv("trials_list_prac_mfk3_balanced.csv") |> 
+  mutate(left_stim = paste(l_set1, l_set2, sep = "_"),
+         right_stim = paste(r_set1, r_set2, sep = "_"),
+         prop_l = l_set1/(l_set1 + l_set2),
+         prop_r = r_set1/(r_set1 + r_set2),
+         larger_prop = case_when(prop_l > prop_r ~ "left",
+                                 prop_r > prop_l ~ "right",
+                                 prop_l == prop_r ~ "same"),
+         
+         larger_num = case_when(l_set1 > r_set1 ~ "left",
+                                r_set1 > l_set1 ~ "right",
+                                l_set1 == r_set1 ~ "same"),
+         
+         ratio_nums = case_when(larger_num == "left" ~ l_set1/r_set1,
+                                larger_num == "right" ~ r_set1/l_set1,
+                                larger_num == "same" ~ l_set1/r_set1),
+         
+         ratio_props = case_when(larger_prop == "left" ~ prop_l/prop_r,
+                                larger_prop == "right" ~ prop_r/prop_l,
+                                larger_prop == "same" ~ prop_l/prop_r),
+         
+         num_congru = case_when(larger_num == "same" ~ "neutral",
+                                larger_prop == larger_num ~ "congru",
+                                larger_prop != larger_num ~ "incongru"),
+         
+         half = case_when(prop_l >= .5 & prop_r <= .5 ~ "opposite",
+                          prop_l <= .5 & prop_r >= .5 ~ "opposite",
+                          TRUE ~ "same")) |>
+  drop_na() |> 
+  select(-c(l_set1, l_set2, r_set1, r_set2)) |> 
+  select(c(left_stim, right_stim, everything())) |> 
+  arrange(num_congru)
+
+final_prac
+```
+
+
+```{r}
+final_test_summ <- read_csv("trials_list_test_mfk3_balanced.csv") |> 
+  mutate(left_stim = paste(l_set1, l_set2, sep = "_"),
+         right_stim = paste(r_set1, r_set2, sep = "_"),
+         prop_l = l_set1/(l_set1 + l_set2),
+         prop_r = r_set1/(r_set1 + r_set2),
+         larger_prop = case_when(prop_l > prop_r ~ "left",
+                                 prop_r > prop_l ~ "right",
+                                 prop_l == prop_r ~ "same"),
+         
+         larger_num = case_when(l_set1 > r_set1 ~ "left",
+                                r_set1 > l_set1 ~ "right",
+                                l_set1 == r_set1 ~ "same"),
+         
+         ratio_nums = case_when(larger_num == "left" ~ l_set1/r_set1,
+                                larger_num == "right" ~ r_set1/l_set1,
+                                larger_num == "same" ~ l_set1/r_set1),
+         
+         ratio_props = case_when(larger_prop == "left" ~ prop_l/prop_r,
+                                larger_prop == "right" ~ prop_r/prop_l,
+                                larger_prop == "same" ~ prop_l/prop_r),
+         
+         num_congru = case_when(larger_num == "same" ~ "neutral",
+                                larger_prop == larger_num ~ "congru",
+                                larger_prop != larger_num ~ "incongru"),
+         
+         half = case_when(prop_l >= .5 & prop_r <= .5 ~ "opposite",
+                          prop_l <= .5 & prop_r >= .5 ~ "opposite",
+                          TRUE ~ "same")) |> 
+  mutate(half = case_when(prop_l >= .5 & prop_r <= .5 ~ "opposite",
+                          prop_l <= .5 & prop_r >= .5 ~ "opposite",
+                          TRUE ~ "same")) |>
+  group_by(num_congru) |> 
+  summarise(min_ratio_num = min(ratio_nums),
+            max_ratio_num = max(ratio_nums),
+            mean_ratio_num = mean(ratio_nums),
+            min_ratio_prop = min(ratio_props),
+            max_ratio_prop = max(ratio_props),
+            mean_ratio_prop = mean(ratio_props),
+            n_same_half = sum(half == "same"),
+            n_opp_half = sum(half == "opposite"))
+
+final_test_summ
+```
+
+
+```{r}
+final_test <- read_csv("trials_list_test_mfk3_balanced.csv") |> 
+  select(l_set1, l_set2, r_set1, r_set2) |> 
+  mutate(left_stim = paste(l_set1, l_set2, sep = "_"),
+         right_stim = paste(r_set1, r_set2, sep = "_"),
+         prop_l = l_set1/(l_set1 + l_set2),
+         prop_r = r_set1/(r_set1 + r_set2),
+         larger_prop = case_when(prop_l > prop_r ~ "left",
+                                 prop_r > prop_l ~ "right",
+                                 prop_l == prop_r ~ "same"),
+         
+         larger_num = case_when(l_set1 > r_set1 ~ "left",
+                                r_set1 > l_set1 ~ "right",
+                                l_set1 == r_set1 ~ "same"),
+         
+         ratio_nums = case_when(larger_num == "left" ~ l_set1/r_set1,
+                                larger_num == "right" ~ r_set1/l_set1,
+                                larger_num == "same" ~ l_set1/r_set1),
+         
+         ratio_props = case_when(larger_prop == "left" ~ prop_l/prop_r,
+                                larger_prop == "right" ~ prop_r/prop_l,
+                                larger_prop == "same" ~ prop_l/prop_r),
+         
+         num_congru = case_when(larger_num == "same" ~ "neutral",
+                                larger_prop == larger_num ~ "congru",
+                                larger_prop != larger_num ~ "incongru"),
+         
+         half = case_when(prop_l >= .5 & prop_r <= .5 ~ "opposite",
+                          prop_l <= .5 & prop_r >= .5 ~ "opposite",
+                          TRUE ~ "same")) |> 
+  mutate(half = case_when(prop_l >= .5 & prop_r <= .5 ~ "opposite",
+                          prop_l <= .5 & prop_r >= .5 ~ "opposite",
+                          TRUE ~ "same")) |>
+  drop_na() |> 
+  select(-c(l_set1, l_set2, r_set1, r_set2)) |> 
+  select(c(left_stim, right_stim, everything())) |> 
+  arrange(num_congru)
+
+```
+
+# Printing out the final stim lists
+
+```{r}
+final_test |>
+  select(left_stim, right_stim)  |>
+  pivot_longer(cols = left_stim:right_stim, names_to = "l_r", values_to = "stimulus_sets")  |> 
+  separate(stimulus_sets, into = c("set1", "set2"))  |> 
+  select(set1, set2) |> 
+  distinct() |> 
+  write_csv("mfk3_full_stim_list.csv")
+```
+
+```{r}
+final_prac |>
+  select(left_stim, right_stim)  |>
+  pivot_longer(cols = left_stim:right_stim, names_to = "l_r", values_to = "stimulus_sets")  |> 
+  separate(stimulus_sets, into = c("set1", "set2"))  |> 
+  select(set1, set2) |> 
+  distinct() |> 
+  write_csv("mfk3_prac_full_stim_list.csv")
+```
+
+# Used same instructions stim list as for mfk2; see csv file
+
+# jspych list
+Joining Set1 and Set2 and separating with an underscore. Rounding between ratio and scale factor from excel file.
+```{r}
+stim_list <- final_test |>
+  rename("opt1_stim" = left_stim,
+         "opt2_stim" = right_stim) |> 
+  mutate(
+    ratio_props = round(ratio_props, 2),
+    numerator_congruency = num_congru
+  ) |>
+  select(opt1_stim, opt2_stim, ratio_props, numerator_congruency, half)
+
+
+prac_list <- final_prac |>
+  rename("opt1_stim" = left_stim,
+         "opt2_stim" = right_stim) |> 
+  mutate(
+    ratio_props = round(ratio_props, 2),
+    numerator_congruency = num_congru
+  ) |>
+  select(opt1_stim, opt2_stim, ratio_props, numerator_congruency, half)
+```
+
+Turning into the json object and exporting to a .js file
+```{r}
+json_data <- lapply(1:nrow(stim_list), function(i) {
+  row <- stim_list[i, ]
+  json_object <- toJSON(list(
+    opt1_stim = row$opt1_stim,
+    opt2_stim = row$opt2_stim,
+    ratio_props = row$ratio_props,
+    numerator_congruency = row$numerator_congruency,
+    half = row$half
+  ), auto_unbox = TRUE)
+  
+  json_object <- gsub('"([^"]+)":', '\\1:', json_object)
+  
+  return(json_object)
+})
+
+
+json_data_2 <- lapply(1:nrow(stim_list), function(i) {
+  row <- stim_list[i, ]
+  json_object <- toJSON(list(
+    opt1_stim = row$opt2_stim,
+    opt2_stim = row$opt1_stim,
+    ratio_props = row$ratio_props,
+    numerator_congruency = row$numerator_congruency,
+    half = row$half
+  ), auto_unbox = TRUE)
+  
+  json_object <- gsub('"([^"]+)":', '\\1:', json_object)
+  
+  return(json_object)
+})
+
+json_data_3 <- lapply(1:nrow(prac_list), function(i) {
+  row <- prac_list[i, ]
+  json_object <- toJSON(list(
+    opt1_stim = row$opt1_stim,
+    opt2_stim = row$opt2_stim,
+    ratio_props = row$ratio_props,
+    numerator_congruency = row$numerator_congruency,
+    half = row$half
+  ), auto_unbox = TRUE)
+  
+  json_object <- gsub('"([^"]+)":', '\\1:', json_object)
+  
+  return(json_object)
+})
+
+json.array <- paste(json_data, collapse = ",\n")
+json.array.2 <- paste(json_data_2, collapse = ",\n")
+json.array.3 <- paste(json_data_3, collapse = ",\n")
+
+write(paste0(
+  "var stim_block_1 = \n[", json.array, "]\n\n", 
+  "var stim_block_2 = \n[", json.array.2, "]\n\n",  
+  "var stim_practice = \n[", json.array.3, "]"), "25_12_16_24prac_and_test_stimuli.js")
+```
