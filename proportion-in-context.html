@@ -596,6 +596,10 @@ var party_transition_videos = [
 
 var partyTransitionIndex = 0;
 
+var parent_introduction = [
+    "videos/introduction.mp4"
+];
+
 
 // setting the task conditions
 var taskConditions = ["probability", "mixture", "sharing"];
@@ -1449,6 +1453,8 @@ if (myCondition == "probability") {
 }
 
 preload_video = preload_video.concat(party_transition_videos);
+
+preload_video = preload_video.concat(parent_introduction);
 
 var test_img = []
 .concat(getStimPath(stim_block_1, ratio_tasks[0].condition))
