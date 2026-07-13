@@ -5,8 +5,8 @@ import pandas as pd
 # Continuous integrated rectangles
 
 # setting up canvas size
-stimW = 300
-stimH = 500
+stimW = 400
+stimH = 600
 
 # num(set1) always orange, other subset (set2) always blue
 numeratorColor = "orange"
