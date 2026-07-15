@@ -5,8 +5,8 @@ import pandas as pd
 # Discretized integrated rectangles
 
 # setting up canvas size
-stimW = 350
-stimH = 550
+stimW = 375
+stimH = 575
 
 # num(set1) always orange, other subset always blue
 numeratorColor = "orange"
