@@ -31,7 +31,7 @@
                 --prob-instr-text-top: 38px;
                 --instr-stim-top: 90px;
             }
-/* Fit the experiment canvas inside the browser viewport. */
+/* fit the experiment canvas inside the browser viewport. */
 html, body {
     margin: 0;
     overflow: hidden;
@@ -45,7 +45,7 @@ html, body {
             min-height: var(--canvas-height);
             margin: 0 auto;
         }
-/* Test images retain the intrinsic dimensions used in CHS. */
+/* imgs on test trials should retain the same dimensions used in CHS. */
 #jspsych-content.trial-button-position {
     --canvas-width: clamp(810px, calc(100vw - 16px), 1100px);
     min-height: 0;
@@ -329,7 +329,8 @@ html, body {
 </head>
     <body></body>
     <script>
-// Stimuli from the original pic_test_stimuli.js dependency.
+
+// comparison stimuli for each block, with ratio, boundary, and congruency information
 var stim_block_1 = [
     {opt1_stim:"4_3", opt2_stim:"5_13", ratio_props:2.06, numerator_congruency:"incongru", half:"opposite"},
     {opt1_stim:"2_15", opt2_stim:"1_3", ratio_props:2.12, numerator_congruency:"incongru", half:"same"},
@@ -797,7 +798,7 @@ var videoPath = getProbabilityInstrDemo(blockNumber, landedColor);
 </div>
 `;
 }
-function loadChildNextButton() {
+function loadNextButton() {
     var wrapper = document.querySelector(".audio-prompt-wrapper");
     var audioPath = wrapper ? wrapper.getAttribute("data-audio-path") : "";
     var button = document.querySelector(".child-next-btn");
@@ -834,7 +835,7 @@ var feedbackAudio = last.correct ? correctAudio : incorrectAudio;
 },
 choices: ["Next"],
 button_html: '<button class="child-next-btn" disabled>%choice%</button>',
-on_load: loadChildNextButton,
+on_load: loadNextButton,
 on_finish: function (data) {
 var last = jsPsych.data.get().last(2).values()[0];
     data.event = "instruction_feedback";
@@ -1062,9 +1063,9 @@ function getCurrentPartyTransitionVideo() {
     return party_transition_videos[partyTransitionIndex];
 }
 // party transition video shown after every 4 test trials
-var partyArrowButton = '<button class="party-introduction-arrow" aria-label="%choice%" hidden disabled><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M15 50 H72 M55 30 L75 50 L55 70" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>';
+var partyArrow = '<button class="party-introduction-arrow" aria-label="%choice%" hidden disabled><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M15 50 H72 M55 30 L75 50 L55 70" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>';
 
-function revealPartyArrowAfterPrompt() {
+function revealPartyArrow() {
     var button = document.querySelector(".party-introduction-arrow");
     playAudioFile("audios/arrow.m4a", function () {
         unlockAudio();
@@ -1092,7 +1093,7 @@ var videoPath = getCurrentPartyTransitionVideo();
         `;
     },
     choices: ["Next"],
-    button_html: partyArrowButton,
+    button_html: partyArrow,
     data: function () {
         return {
             event: "party_transition_video",
@@ -1113,7 +1114,7 @@ function finishVideo() {
                 unlockAudio();
                 jsPsych.finishTrial({ response: null, rt: null });
             } else {
-                revealPartyArrowAfterPrompt();
+                revealPartyArrow();
             }
         }
         if (video) {
@@ -1495,7 +1496,7 @@ function makeInstructionPages(getPages, onStart, shouldAutoAdvance) {
                 button_html: '<button class="child-next-btn" disabled>%choice%</button>',
                 on_load: function () {
                     if (!shouldAutoAdvance || !shouldAutoAdvance(pageIndex, pages.length)) {
-                        loadChildNextButton();
+                        loadNextButton();
                         return;
                     }
 
@@ -1524,7 +1525,7 @@ var block1_transition = {
     },
 choices: ["Next"],
 button_html: '<button class="child-next-btn" disabled>%choice%</button>',
-on_load: loadChildNextButton,
+on_load: loadNextButton,
 };
 var block2_instructions = makeInstructionPages(format2_instructions, function () {
     block = 1;
@@ -1591,10 +1592,10 @@ var party_introduction_trial = {
         </div>
     `,
     choices: ["Next"],
-    button_html: partyArrowButton,
+    button_html: partyArrow,
     on_load: function () {
         lockAudio();
-        playAudioFile("audios/introduction_party.m4a", revealPartyArrowAfterPrompt);
+        playAudioFile("audios/introduction_party.m4a", revealPartyArrow);
     },
     data: { event: "party_introduction_audio" },
 };
@@ -1653,7 +1654,7 @@ function fitExperimentToViewport() {
         var viewport = document.documentElement;
         var testLayout = content.querySelector(".trial-layout");
         var tigerScreen = content.querySelector(".tiger-screen");
-        // The test grid reserves space for the tallest animal on every trial.
+        // test grid maintains space for the tallest animal on every trial.
         var width = testLayout ? testLayout.offsetWidth : tigerScreen ? 1250 : Math.max(content.offsetWidth, content.scrollWidth);
         var height = testLayout ? testLayout.offsetHeight : tigerScreen ? 760 : Math.max(content.offsetHeight, content.scrollHeight);
         scale = Math.min(1, (viewport.clientWidth - 16) / width, (viewport.clientHeight - 16) / height);
