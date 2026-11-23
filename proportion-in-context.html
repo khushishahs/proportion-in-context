@@ -8,349 +8,17 @@
         <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3"></script>
         <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script>
         <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.3"></script>
+        <link rel="stylesheet" href="./pic.css">
+        <script src="./pic_browser_settings.js"></script>
+        <script src="./pic_preload_assets.js"></script>
+        <script src="./pic_buttons.js"></script>
+        <script src="./pic_global_states.js"></script>
+        <script src="./pic_cover_story.js"></script>
+        <script src="./pic_test_stimuli.js"></script>
         <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" type="text/css" />
-        <style>
-            :root {
-                --canvas-width: 1250px;
-                --canvas-height: 760px;
-                --instr-text-width: 900px;
-                --mc-width: 180px;
-                --side-character-size: 100px;
-                --tiger-screen-width: 220px;
-                --instr-stim-size: 600px;
-                --instr-button-gap: 110px;
-                --probability-face-size: 200px;
-                --instr-video-width: 300px;
-                --instr-video-height: 500px;
-                --instr-mc-top: 200px;
-                --instr-mc-right: 160px;
-                --prob-mc-top: 132px;
-                --prob-mc-right: 100px;
-                --instr-text-top: 114px;
-                --prob-instr-text-top: 38px;
-                --instr-stim-top: 90px;
-            }
-/* fit the experiment canvas inside the browser viewport. */
-html, body {
-    margin: 0;
-    overflow: hidden;
-}
-
-        #jspsych-content {
-            display: flow-root;
-            position: relative;
-            width: var(--canvas-width);
-            max-width: var(--canvas-width);
-            min-height: var(--canvas-height);
-            margin: 0 auto;
-        }
-/* imgs on test trials should retain the same dimensions used in CHS. */
-#jspsych-content.trial-button-position {
-    --canvas-width: clamp(810px, calc(100vw - 16px), 1100px);
-    min-height: 0;
-}
-.tiger-screen {
-    display: block;
-    width: var(--tiger-screen-width);
-    height: auto;
-    margin: 0 auto 30px;
-}
-.trial-layout {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: 156px auto;
-    justify-items: center;
-    gap: 10px 20px;
-    padding-top: 8px;
-    text-align: center;
-}
-.main-character {
-    grid-column: 1 / -1;
-    width: var(--side-character-size);
-    height: 156px;
-    object-fit: contain;
-}
-.stim-container {
-    position: relative;
-}
-.stim-rect,
-.side-character-img {
-    display: block;
-    width: auto;
-    height: auto;
-    margin: 0 auto;
-}
-.stim-rect {
-    width: 375px;
-    height: 575px;
-}
-.side-character-container {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 170px;
-    height: 165px;
-    margin: 0 auto;
-}
-.side-character-img {
-    pointer-events: none;
-}
-#jspsych-content.trial-button-position #jspsych-html-button-response-btngroup {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-}
-.trial-button-position .jspsych-html-button-response-button {
-    position: absolute;
-    margin: 0 !important;
-}
-.side-character-btn {
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0;
-    margin: 0;
-    cursor: pointer;
-}
-.stim-container.pulse-highlight {
-    animation: yellowPulse 0.85s ease-in-out 1;
-}
-@keyframes yellowPulse {
-    0% {
-        box-shadow: 0 0 0 rgba(255, 230, 0, 0);
-    }
-50% {
-    box-shadow: 0 0 35px 12px rgba(255, 230, 0, 0.9);
-}
-100% {
-    box-shadow: 0 0 0 rgba(255, 230, 0, 0);
-}
-}
-/* instruction trials */
-.instr-layout {
-    position: relative;
-    width: var(--canvas-width);
-    height: var(--canvas-height);
-    margin: 0 auto;
-    text-align: center;
-}
-.instr-main-character {
-    position: absolute;
-    top: var(--instr-mc-top);
-    right: var(--instr-mc-right);
-    width: var(--mc-width);
-    height: auto;
-}
-.instr-text {
-    position: absolute;
-    top: var(--instr-text-top);
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: var(--instr-text-width);
-    text-align: center;
-}
-.instr-video {
-    width: var(--instr-video-width);
-    height: var(--instr-video-height);
-}
-.instr-stim-container {
-    position: absolute;
-    top: var(--instr-stim-top);
-    left: 50%;
-    width: var(--instr-stim-size);
-    height: var(--instr-stim-size);
-    transform: translateX(-50%);
-}
-.instr-stim-img {
-    display: block;
-    max-width: 100%;
-    height: auto;
-    margin: 0 auto;
-}
-.instr-side-character {
-    display: block;
-    width: var(--side-character-size);
-    height: var(--side-character-size);
-    margin: 12px auto 0 auto;
-    pointer-events: none;
-}
-.subset-button-position #jspsych-html-button-response-btngroup {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: var(--instr-button-gap);
-    margin-top: -60px;
-}
-.subset-circle-button {
-    width: 175px;
-    height: 175px;
-    border: 3px solid black;
-    border-radius: 50%;
-    cursor: pointer;
-}
-.subset-button-position
-.jspsych-html-button-response-button:nth-child(1)
-.subset-circle-button {
-    background-color: orange;
-}
-.subset-button-position
-.jspsych-html-button-response-button:nth-child(2)
-.subset-circle-button {
-    background-color: dodgerblue;
-}
-.subset-circle-button:hover {
-    transform: scale(1.05);
-}
-/* probability instruction trials */
-.prob-instr-text {
-    position: absolute;
-    top: var(--prob-instr-text-top);
-    left: 50%;
-    transform: translateX(-50%);
-    width: var(--instr-text-width);
-    text-align: center;
-}
-.prob-instr-main-character {
-    position: absolute;
-    top: var(--prob-mc-top);
-    right: var(--prob-mc-right);
-    width: var(--mc-width);
-    height: auto;
-}
-.prob-instr-side-character {
-    display: block;
-    width: var(--side-character-size);
-    height: var(--side-character-size);
-    margin: 7px auto 0 auto;
-    pointer-events: none;
-}
-.prob-instr-helper {
-    margin-top: 8px;
-    font-size: 20px;
-    line-height: 1.4;
-}
-.yes-no-button-position #jspsych-html-button-response-btngroup {
-    position: relative;
-    z-index: 10;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: var(--instr-button-gap);
-    margin-top: -80px;
-}
-.probability-face-button {
-    position: relative;
-    z-index: 11;
-    background: transparent;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-}
-.probability-face-img {
-    width: var(--probability-face-size);
-    height: var(--probability-face-size);
-    object-fit: contain;
-    pointer-events: none;
-}
-.yes-no-button-position
-.jspsych-html-button-response-button:nth-child(1)
-.probability-face-img {
-    content: url("img/probability_instructions/happy_face.png");
-}
-.yes-no-button-position
-.jspsych-html-button-response-button:nth-child(2)
-.probability-face-img {
-    content: url("img/probability_instructions/sad_face.png");
-}
-.probability-face-button:hover {
-    transform: scale(1.05);
-}
-/* party transitions */
-.party-transition-layout {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    background: black;
-    z-index: 9999;
-}
-.party-transition-video {
-    width: 100vw;
-    height: 100vh;
-    object-fit: contain;
-    background: black;
-}
-/* locking audios */
-.audio-locked #jspsych-instructions-next,
-.audio-locked #jspsych-html-button-response-btngroup button {
-    pointer-events: none;
-    opacity: 0.5;
-}
-.audio-locked #jspsych-html-button-response-btngroup,
-.audio-locked #jspsych-html-button-response-btngroup .jspsych-html-button-response-button,
-.audio-locked #jspsych-html-button-response-btngroup button {
-    pointer-events: none !important;
-}
-    .child-next-btn {
-        min-width: 180px;
-        min-height: 65px;
-        font-size: 26px;
-        font-weight: bold;
-    }
-    #jspsych-content:has(.party-transition-layout) #jspsych-html-button-response-btngroup {
-        position: fixed;
-        right: 35px;
-        bottom: 30px;
-        z-index: 10000;
-    }
-    .party-introduction-arrow {
-        border: 0;
-        padding: 0;
-        background: transparent;
-        cursor: pointer;
-    }
-    .party-introduction-arrow svg {
-        display: block;
-        width: min(160px, 25vw, 25vh);
-        height: auto;
-        filter: drop-shadow(0 2px 5px black);
-        pointer-events: none;
-    }
-    </style>
 </head>
     <body></body>
     <script>
-
-// comparison stimuli for each block, with ratio, boundary, and congruency information
-var stim_block_1 = [
-    {opt1_stim:"4_3", opt2_stim:"5_13", ratio_props:2.06, numerator_congruency:"incongru", half:"opposite"},
-    {opt1_stim:"2_15", opt2_stim:"1_3", ratio_props:2.12, numerator_congruency:"incongru", half:"same"},
-    {opt1_stim:"3_1", opt2_stim:"5_11", ratio_props:2.4, numerator_congruency:"incongru", half:"opposite"},
-    {opt1_stim:"2_12", opt2_stim:"1_2", ratio_props:2.33, numerator_congruency:"incongru", half:"same"},
-    {opt1_stim:"2_2", opt2_stim:"3_13", ratio_props:2.67, numerator_congruency:"incongru", half:"opposite"},
-    {opt1_stim:"2_14", opt2_stim:"1_2", ratio_props:2.67, numerator_congruency:"incongru", half:"same"},
-    {opt1_stim:"3_10", opt2_stim:"2_1", ratio_props:2.89, numerator_congruency:"incongru", half:"opposite"},
-    {opt1_stim:"1_2", opt2_stim:"2_15", ratio_props:2.83, numerator_congruency:"incongru", half:"same"}
-];
-
-var stim_block_2 = [
-    {opt1_stim:"5_13", opt2_stim:"4_3", ratio_props:2.06, numerator_congruency:"incongru", half:"opposite"},
-    {opt1_stim:"1_3", opt2_stim:"2_15", ratio_props:2.12, numerator_congruency:"incongru", half:"same"},
-    {opt1_stim:"5_11", opt2_stim:"3_1", ratio_props:2.4, numerator_congruency:"incongru", half:"opposite"},
-    {opt1_stim:"1_2", opt2_stim:"2_12", ratio_props:2.33, numerator_congruency:"incongru", half:"same"},
-    {opt1_stim:"3_13", opt2_stim:"2_2", ratio_props:2.67, numerator_congruency:"incongru", half:"opposite"},
-    {opt1_stim:"1_2", opt2_stim:"2_14", ratio_props:2.67, numerator_congruency:"incongru", half:"same"},
-    {opt1_stim:"2_1", opt2_stim:"3_10", ratio_props:2.89, numerator_congruency:"incongru", half:"opposite"},
-    {opt1_stim:"2_15", opt2_stim:"1_2", ratio_props:2.83, numerator_congruency:"incongru", half:"same"}
-];
 
 // need to initialize jsPsych and the timeline, which will control the actual experiment
 var timeline = [];
@@ -366,156 +34,7 @@ var right_stim = "temp";
 var left_path = "temp";
 var right_path = "temp";
 var trialIndexType = "test"; // fix to add instruction
-// preload audios 
-var preload_audio = [
-"audios/introduction_party.m4a",
-"audios/start.m4a",
-"audios/arrow.m4a",
-"audios/next.m4a",
-"audios/click_instructions.m4a",
-"audios/practice_transition.m4a",
-"audios/left_prompt.m4a",
-"audios/right_prompt.m4a",
-"audios/probability/task_introduction.m4a",
-"audios/mixture/task_introduction.m4a",
-"audios/sharing/task_introduction.m4a",
-"audios/probability/task_prompt.m4a",
-"audios/mixture/task_prompt.m4a",
-"audios/sharing/task_prompt.m4a",
-"audios/mixture/introducing_parts.m4a",
-"audios/probability/demo1_transition.m4a",
-"audios/sharing/demo1_transition.m4a",
-"audios/probability/identifyingparts_orange.m4a",
-"audios/mixture/identifyingparts_orange.m4a",
-"audios/sharing/identifyingparts_orange.m4a",
-"audios/probability/correct_feedback_orange.m4a",
-"audios/probability/incorrect_feedback_orange.m4a",
-"audios/mixture/correct_feedback_orange.m4a",
-"audios/mixture/incorrect_feedback_orange.m4a",
-"audios/sharing/correct_feedback_orange.m4a",
-"audios/sharing/incorrect_feedback_orange.m4a",
-"audios/probability/demo2_transition.m4a",
-"audios/probability/identifyingparts_blue.m4a",
-"audios/mixture/identifyingparts_blue.m4a",
-"audios/sharing/identifyingparts_blue.m4a",
-"audios/probability/correct_feedback_blue.m4a",
-"audios/probability/incorrect_feedback_blue.m4a",
-"audios/probability/click_instructions.m4a",
-"audios/mixture/correct_feedback_blue.m4a",
-"audios/mixture/incorrect_feedback_blue.m4a",
-"audios/sharing/correct_feedback_blue.m4a",
-"audios/sharing/incorrect_feedback_blue.m4a",
-"audios/sharing/click_instructions.m4a",
-"audios/probability/block1_transition.m4a",
-"audios/sharing/block1_transition.m4a",
-"audios/mixture/block1_transition.m4a",
-"audios/mixture/click_instructions.m4a",
-"audios/probability/block2_transition.m4a",
-"audios/mixture/block2_transition.m4a",
-"audios/sharing/block2_transition.m4a",
-"audios/sharing/demo.m4a",
-];
-// preload animal imgs
-var trial_img = [
-"img/tiger.png",
-"img/party_tiger.png",
-"img/elephant.png",
-"img/animals/dog.png",
-"img/animals/lion.png",
-"img/animals/moose.png",
-"img/animals/hummingbird.png",
-"img/animals/sloth.png",
-"img/animals/monkey.png",
-"img/animals/leopard.png",
-"img/animals/turtle.png",
-"img/animals/wolf.png",
-"img/animals/octopus.png",
-"img/animals/penguin.png",
-"img/animals/parrot.png",
-"img/animals/cow.png",
-"img/animals/dolphin.png",
-"img/animals/hippo.png",
-"img/animals/frog.png",
-"img/animals/polarbear.png",
-"img/animals/shark.png",
-"img/animals/squirrel.png",
-"img/animals/beaver.png",
-"img/animals/bear.png",
-"img/animals/bat.png",
-"img/animals/seagull.png",
-"img/animals/bluewhale.png",
-"img/animals/seahorse.png",
-"img/animals/fox.png",
-"img/animals/narwhal.png",
-"img/animals/zebra.png",
-"img/animals/fish.png",
-"img/animals/giraffe.png",
-"img/animals/bluejay.png",
-"img/animals/starfish.png",
-];
-// preload test stimuli by format for each block
-function getStimPath(stimList, formatCondition) {
-var paths = [];
-    stimList.forEach(function (trial) {
-        paths.push(
-        "StimFiles_test/" +
-        formatCondition +
-        "_" +
-        participantBottomColor +
-        "_bottom_" +
-        trial.opt1_stim +
-        ".png",
-    );
-    paths.push(
-    "StimFiles_test/" +
-    formatCondition +
-    "_" +
-    participantBottomColor +
-    "_bottom_" +
-    trial.opt2_stim +
-    ".png",
-);
-});
-return paths;
-}
-// preload format-specific instruction stim
-var instructions_img = [
-"img/format_instructions/ContRectInt_blue_bottom_7_7.png",
-"img/format_instructions/ContRectInt_orange_bottom_7_7.png",
-"img/format_instructions/DivRectInt_blue_bottom_7_7.png",
-"img/format_instructions/DivRectInt_orange_bottom_7_7.png",
-];
-// preload sharing-specific assets
-var sharing_img = ["img/sharing_instructions/total.png"];
-var probability_img = [
-"img/probability_instructions/happy_face.png",
-"img/probability_instructions/sad_face.png",
-];
-// preload probability-specific assets
-var probability_videos = [
-"videos/probability_instructions/ContRectInt_blue_bottom_7_7_orange.mp4",
-"videos/probability_instructions/ContRectInt_blue_bottom_7_7_blue.mp4",
-"videos/probability_instructions/ContRectInt_orange_bottom_7_7_orange.mp4",
-"videos/probability_instructions/ContRectInt_orange_bottom_7_7_blue.mp4",
-"videos/probability_instructions/DivRectInt_blue_bottom_7_7_orange.mp4",
-"videos/probability_instructions/DivRectInt_blue_bottom_7_7_blue.mp4",
-"videos/probability_instructions/DivRectInt_orange_bottom_7_7_orange.mp4",
-"videos/probability_instructions/DivRectInt_orange_bottom_7_7_blue.mp4",
-];
-// preload party transition videos shown after every 4 test trials
-var party_transition_videos = [
-    "videos/party_transitions/decorations.mp4",
-    "videos/party_transitions/party_favors.mp4",
-    "videos/party_transitions/cake.mp4",
-    "videos/party_transitions/ending.mp4",
-];
-var partyTransitionIndex = 0;
-var parent_introduction = [
-    "videos/introduction.mp4"
-];
-var party_introduction = [
-"img/party_introduction.png"
-];
+
 // setting the task conditions
 var taskConditions = ["probability", "mixture", "sharing"];
 var myConditionNumber = Math.floor(Math.random() * 3);
@@ -559,11 +78,7 @@ myOrder == "continuousFirst"
     reg: "regular",
 },
 ];
-// adding this information for every trial in datafile
-jsPsych.data.addProperties({
-    condition: myCondition,
-    bottom_color: participantBottomColor,
-});
+
 // shuffle is the Fisher-Yates (aka Knuth) Shuffle
 function shuffle(array) {
 let currentIndex = array.length,
@@ -651,17 +166,7 @@ var allTrials = stim_block_1.concat(stim_block_2);
 allTrials.forEach(function (trial, i) {
     trial.animal = shuffledAnimals[i];
 });
-// choose task-specific click instruction audio for instruction trials 
-function getClickInstructionsAudio() {
-    if (myCondition == "probability") {
-        return "audios/probability/click_instructions.m4a";
-    } else if (myCondition == "mixture") {
-        return "audios/mixture/click_instructions.m4a";
-    } else if (myCondition == "sharing") {
-        return "audios/sharing/click_instructions.m4a";
-    }
-return "";
-}
+
 // prompts based on task condition
 function getCurPrompt() {
     if (myCondition == "probability") {
@@ -719,30 +224,25 @@ var trialData = getCurTrial();
 </div>
 </div>`;
 }
+
+// choose task-specific click instruction audio for instruction trials 
+function getClickInstructionsAudio() {
+    if (myCondition == "probability") {
+        return "audios/probability/click_instructions.m4a";
+    } else if (myCondition == "mixture") {
+        return "audios/mixture/click_instructions.m4a";
+    } else if (myCondition == "sharing") {
+        return "audios/sharing/click_instructions.m4a";
+    }
+return "";
+}
+
 // instruction img based on format order and subset order
 function getInstructionImg(blockNumber) {
 var formatCondition = ratio_tasks[blockNumber].condition;
     return "img/format_instructions/" + formatCondition + "_" + participantBottomColor + "_bottom_7_7.png";
 }
-// create instruction trials
-function buildInstrStim(audioPath, blockNumber, textInstruction) {
-var instructionImg = getInstructionImg(blockNumber);
-    return `
-    <div class="instr-layout">
-        <div class="instr-text">
-            ${createAudioPrompt(audioPath, getClickInstructionsAudio())}
-            <p style="font-size: 20px; line-height: 1.4; margin-top: 8px;">
-                ${textInstruction}
-            </p>
-    </div>
-<img src="img/tiger.png" class="instr-main-character">
-<div class="instr-stim-container">
-    <img src="${instructionImg}" class="instr-stim-img">
-    <img src="img/elephant.png" class="instr-side-character">
-</div>
-</div>
-`;
-}
+
 // convert color label to numerator subset location for instruction trials
 function getInstrFormat(colorName) {
     if (participantBottomColor === colorName) {
@@ -764,14 +264,27 @@ var formatCondition = ratio_tasks[blockNumber].condition;
     ".mp4"
 );
 }
-// switch button-positioning classes for each trial type
-function setButtonLayoutClass(className) {
-var content = document.querySelector("#jspsych-content");
-    content.classList.remove("trial-button-position", "subset-button-position", "yes-no-button-position");
-    if (className) {
-        content.classList.add(className);
-    }
+// create instruction trials
+function buildInstrStim(audioPath, blockNumber, textInstruction) {
+var instructionImg = getInstructionImg(blockNumber);
+    return `
+    <div class="instr-layout">
+        <div class="instr-text">
+            ${createAudioPrompt(audioPath, getClickInstructionsAudio())}
+            <p style="font-size: 20px; line-height: 1.4; margin-top: 8px;">
+                ${textInstruction}
+            </p>
+    </div>
+<img src="img/tiger.png" class="instr-main-character">
+<div class="instr-stim-container">
+    <img src="${instructionImg}" class="instr-stim-img">
+    <img src="img/elephant.png" class="instr-side-character">
+</div>
+</div>
+`;
 }
+
+
 // define HTML for probability instruction trials
 function buildProbabilityInstrTrial(audioPath, blockNumber, landedColor, textInstruction) {
 var videoPath = getProbabilityInstrDemo(blockNumber, landedColor);
@@ -797,26 +310,7 @@ var videoPath = getProbabilityInstrDemo(blockNumber, landedColor);
 </div>
 `;
 }
-function loadNextButton() {
-    var wrapper = document.querySelector(".audio-prompt-wrapper");
-    var audioPath = wrapper ? wrapper.getAttribute("data-audio-path") : "";
-    var button = document.querySelector(".child-next-btn");
 
-    lockAudio();
-
-    function playNextPrompt() {
-        playAudioFile("audios/next.m4a", function () {
-            unlockAudio();
-            button.disabled = false;
-        });
-    }
-
-    if (audioPath) {
-        playAudioFile(audioPath, playNextPrompt);
-    } else {
-        playNextPrompt();
-    }
-}
 
 // instruction feedback per task condition
 function makeInstructionFeedback(correctAudio, incorrectAudio) {
@@ -842,10 +336,7 @@ var last = jsPsych.data.get().last(2).values()[0];
 },
 };
 }
-// invisible button for test trials
-var hidden_button_html = `
-<button class="side-character-btn" aria-label="%choice%"></button>
-`;
+
 // mixture task instruction trials: identify numerator
 var mixture_check_orange_block1 = {
     type: jsPsychHtmlButtonResponse,
@@ -1057,90 +548,8 @@ var white_screen = {
         event: "white_screen",
     },
 };
-// choose the next party transition video in the fixed order
-function getCurrentPartyTransitionVideo() {
-    return party_transition_videos[partyTransitionIndex];
-}
-// party transition video shown after every 4 test trials
-var partyArrow = '<button class="party-introduction-arrow" aria-label="%choice%" hidden disabled><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M15 50 H72 M55 30 L75 50 L55 70" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>';
 
-function revealPartyArrow() {
-    var button = document.querySelector(".party-introduction-arrow");
-    playAudioFile("audios/arrow.m4a", function () {
-        unlockAudio();
-        button.disabled = false;
-        button.hidden = false;
-    });
-}
 
-var party_transition_video = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: function () {
-var videoPath = getCurrentPartyTransitionVideo();
-        return `
-        <div class="party-transition-layout">
-            <video
-                id="party-transition-video"
-                class="party-transition-video"
-                autoplay
-                playsinline
-                preload="auto"
-            >
-                <source src="${videoPath}" type="video/mp4">
-            </video>
-        </div>
-        `;
-    },
-    choices: ["Next"],
-    button_html: partyArrow,
-    data: function () {
-        return {
-            event: "party_transition_video",
-            party_transition_number: partyTransitionIndex + 1,
-            party_transition_video: getCurrentPartyTransitionVideo(),
-        };
-    },
-    on_load: function () {
-        lockAudio();
-var video = document.getElementById("party-transition-video");
-var hasFinished = false;
-function finishVideo() {
-            if (hasFinished) {
-                return;
-            }
-            hasFinished = true;
-            if (partyTransitionIndex === party_transition_videos.length - 1) {
-                unlockAudio();
-                jsPsych.finishTrial({ response: null, rt: null });
-            } else {
-                revealPartyArrow();
-            }
-        }
-        if (video) {
-            video.onended = finishVideo;
-            video.onerror = finishVideo;
-var playPromise = video.play();
-            if (playPromise && typeof playPromise.catch === "function") {
-                playPromise.catch(function () {
-                    finishVideo();
-                });
-            }
-        } else {
-            finishVideo();
-        }
-    },
-    on_finish: function (data) {
-        data.party_transition_completed = true;
-        partyTransitionIndex++;
-    },
-};
-// Play two party transitions per eight-trial block, after trials 4 and 8.
-var party_transitions= {
-    timeline: [party_transition_video],
-    conditional_function: function () {
-        return trialIndex > 0 && trialIndex % 4 === 0 && partyTransitionIndex < party_transition_videos.length;
-    },
-};
 // test trial
 var stim_display = {
     type: jsPsychHtmlButtonResponse,
@@ -1199,6 +608,7 @@ var trialData = getCurTrial();
     trialIndex++;
 },
 };
+
 // preload by task condition
 var preload_img = trial_img.slice().concat(instructions_img);
 var preload_video = [];
@@ -1226,136 +636,7 @@ var preload = {
     message: "Please wait for the experiment to load",
 };
 timeline.push(preload);
-var audioLockCount = 0;
-var lastInstructionAudio = null;
-// manage clickability controls while audio is playing
-function setAudioLock(isLocked) {
-var content = document.querySelector("#jspsych-content");
-    if (content) {
-        content.classList.toggle("audio-locked", isLocked);
-    }
-var nextButton = document.querySelector("#jspsych-instructions-next");
-if (nextButton) {
-    nextButton.disabled = isLocked;
-}
-var responseButtons = document.querySelectorAll(
-"#jspsych-html-button-response-btngroup button"
-);
-responseButtons.forEach(function (button) {
-    button.disabled = isLocked;
-});
-var responseWrappers = document.querySelectorAll(
-"#jspsych-html-button-response-btngroup .jspsych-html-button-response-button"
-);
-responseWrappers.forEach(function (wrapper) {
-    wrapper.style.pointerEvents = isLocked ? "none" : "auto";
-});
-}
-// disable participant's response while audio/video is still playing
-function lockAudio() {
-    audioLockCount++;
-    setAudioLock(true);
-}
-// re-enable participant's response after audio/video finishes
-function unlockAudio() {
-    audioLockCount = Math.max(0, audioLockCount - 1);
-    if (audioLockCount === 0) {
-        setAudioLock(false);
-    }
-}
-document.addEventListener(
-    "keydown",
-function (event) {
-        if (audioLockCount > 0 && event.code === "Space") {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-        }
-    },
-    true,
-);
-// audio/video playback instructions 
-function createAudioPrompt(audioPath, nextAudioPath, playVideoAfter) {
-    return `
-    <div
-    class="audio-prompt-wrapper"
-    data-audio-path="${audioPath}"
-    data-next-audio-path="${nextAudioPath || ""}"
-    data-play-video-after="${playVideoAfter ? "true" : "false"}"
-    style="text-align: center; margin-top: 20px;"
-    ></div>
-    `;
-}
-// play audio and manage controls for instruction trials
-function playAudioFile(audioPath, onEnded) {
-var audio = new Audio(audioPath);
-var hasEnded = false;
-function finishAudio() {
-        if (hasEnded) {
-            return;
-        }
-    hasEnded = true;
-    if (onEnded) {
-        onEnded();
-    }
-}
-audio.preload = "auto";
-audio.playsInline = true;
-audio.onended = finishAudio;
-audio.onerror = finishAudio;
-var playPromise = audio.play();
-if (playPromise && typeof playPromise.catch === "function") {
-    playPromise.catch(function () {
-        finishAudio();
-    });
-}
-return audio;
-}
-// play instruction audio while keeping the page locked so participants can't interact with the experiment until it finishes
-function playInstructionAudioFile(audioPath, onEnded) {
-    lockAudio();
-    playAudioFile(audioPath, function () {
-        unlockAudio();
-        if (onEnded) {
-            onEnded();
-        }
-});
-}
-// play click instructions after the probability demo video ends
-function finishProbabilityDemoAudio() {
-    playInstructionAudioFile(getClickInstructionsAudio(), function () {
-        setAudioLock(false);
-    });
-}
-// find the current instruction page audio wrapper and start the correct audio sequence
-function playCurrentInstructionAudio() {
-var wrapper = document.querySelector(".audio-prompt-wrapper");
-    if (!wrapper) {
-        return;
-    }
-var audioPath = wrapper.getAttribute("data-audio-path");
-var nextAudioPath = wrapper.getAttribute("data-next-audio-path");
-var playVideoAfter = wrapper.getAttribute("data-play-video-after") === "true";
-var audioKey = audioPath + "|" + nextAudioPath + "|" + playVideoAfter;
-if (!audioPath || audioKey === lastInstructionAudio) {
-    return;
-}
-lastInstructionAudio = audioKey;
-playInstructionAudioFile(audioPath, function () {
-    if (nextAudioPath) {
-        playInstructionAudioFile(nextAudioPath, function () {
-            if (playVideoAfter) {
-                document.getElementById("probability-demo-video").play();
-            }
-    });
-} else if (playVideoAfter) {
-    setAudioLock(true);
-var video = document.getElementById("probability-demo-video");
-    if (video) {
-        video.play();
-    }
-}
-});
-}
+
 // block 1 instruction pages by task condition
 function task_introduction() {
 var img_by_format = getInstructionImg(0);
@@ -1482,7 +763,9 @@ function getBlock2TransitionAudio() {
     }
 return "";
 }
-function makeInstructionPages(getPages, onStart, shouldAutoAdvance) {
+
+// build timeline for instruction pages, with optional auto-advance for some pages
+function buildInstructionPages(getPages, onStart, shouldAutoAdvance) {
     var pages = getPages();
 
     return {
@@ -1510,7 +793,29 @@ function makeInstructionPages(getPages, onStart, shouldAutoAdvance) {
     };
 }
 
-var instructions = makeInstructionPages(task_introduction, function () {
+// define the click to start trial to begin the experiment
+var startAudio;
+var click_to_start = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+        <div style="text-align: center; margin-top: 250px;">
+            <img src="img/tiger.png" alt="Tiger" class="tiger-screen">
+        </div>
+    `,
+    choices: ["Start"],
+    on_load: function () {
+        startAudio = playAudioFile("audios/start.m4a");
+    },
+    on_finish: function () {
+        if (startAudio) {
+            startAudio.pause();
+        }
+    },
+    data: { event: "introduction_party_start" },
+};
+
+
+var instructions = buildInstructionPages(task_introduction, function () {
     block = 0;
     trialIndex = 0;
 }, function (pageIndex, pageCount) {
@@ -1526,7 +831,8 @@ choices: ["Next"],
 button_html: '<button class="child-next-btn" disabled>%choice%</button>',
 on_load: loadNextButton,
 };
-var block2_instructions = makeInstructionPages(format2_instructions, function () {
+
+var block2_instructions = buildInstructionPages(format2_instructions, function () {
     block = 1;
     trialIndex = 0;
     ratio_loop = 1;
@@ -1563,42 +869,6 @@ var block2_procedure = {
 };
 var ratio_loop = 0;
 
-var startAudio;
-var click_to_start = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: `
-        <div style="text-align: center; margin-top: 250px;">
-            <img src="img/tiger.png" alt="Tiger" class="tiger-screen">
-        </div>
-    `,
-    choices: ["Start"],
-    on_load: function () {
-        startAudio = playAudioFile("audios/start.m4a");
-    },
-    on_finish: function () {
-        if (startAudio) {
-            startAudio.pause();
-        }
-    },
-    data: { event: "introduction_party_start" },
-};
-
-var party_introduction_trial = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: `
-        <div class="party-transition-layout">
-            <img src="img/party_introduction.png" alt="Tiger's party" class="party-transition-video">
-        </div>
-    `,
-    choices: ["Next"],
-    button_html: partyArrow,
-    on_load: function () {
-        lockAudio();
-        playAudioFile("audios/introduction_party.m4a", revealPartyArrow);
-    },
-    data: { event: "party_introduction_audio" },
-};
-
 var ratio_timeline = [click_to_start, party_introduction_trial, instructions];
 if (myCondition == "mixture") {
     ratio_timeline.push(mixture_check_orange_block1);
@@ -1631,51 +901,8 @@ var ratio_node = {
     },
 };
 timeline.push(ratio_node);
-function alignTestButtons(content) {
-    var buttons = content.querySelectorAll(".jspsych-html-button-response-button");
-    content.querySelectorAll(".side-character-container").forEach(function (animal, index) {
-        var button = buttons[index];
-        button.style.left = animal.offsetLeft + animal.offsetParent.offsetLeft + "px";
-        button.style.top = animal.offsetTop + animal.offsetParent.offsetTop + "px";
-        button.style.width = animal.offsetWidth + "px";
-        button.style.height = animal.offsetHeight + "px";
-    });
-}
 
-function fitExperimentToViewport() {
-    var content = document.getElementById("jspsych-content");
-    if (!content) {
-        return;
-    }
-
-    var scale = 1;
-    if (!content.querySelector(".party-transition-layout")) {
-        var viewport = document.documentElement;
-        var testLayout = content.querySelector(".trial-layout");
-        var tigerScreen = content.querySelector(".tiger-screen");
-        // test grid maintains space for the tallest animal on every trial.
-        var width = testLayout ? testLayout.offsetWidth : tigerScreen ? 1250 : Math.max(content.offsetWidth, content.scrollWidth);
-        var height = testLayout ? testLayout.offsetHeight : tigerScreen ? 760 : Math.max(content.offsetHeight, content.scrollHeight);
-        scale = Math.min(1, (viewport.clientWidth - 16) / width, (viewport.clientHeight - 16) / height);
-    }
-    content.style.zoom = scale;
-    if (content.classList.contains("trial-button-position")) {
-        alignTestButtons(content);
-    }
-}
-
-function watchExperimentLayout() {
-    var frame;
-    function scheduleFit() {
-        cancelAnimationFrame(frame);
-        frame = requestAnimationFrame(fitExperimentToViewport);
-    }
-    new MutationObserver(scheduleFit).observe(document.body, { childList: true, subtree: true });
-    document.addEventListener("load", scheduleFit, true);
-    window.addEventListener("resize", scheduleFit);
-}
-
-watchExperimentLayout();
+ExperimentLayout();
 jsPsych.run(timeline);
 </script>
 </html>

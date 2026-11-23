@@ -1,0 +1,315 @@
+/* shared css components */
+            :root {
+                --canvas-width: 1250px;
+                --canvas-height: 760px;
+                --instr-text-width: 900px;
+                --mc-width: 180px;
+                --side-character-size: 100px;
+                --tiger-screen-width: 220px;
+                --instr-stim-size: 600px;
+                --instr-button-gap: 110px;
+                --probability-face-size: 200px;
+                --instr-video-width: 300px;
+                --instr-video-height: 500px;
+                --instr-mc-top: 200px;
+                --instr-mc-right: 160px;
+                --prob-mc-top: 132px;
+                --prob-mc-right: 100px;
+                --instr-text-top: 114px;
+                --prob-instr-text-top: 38px;
+                --instr-stim-top: 90px;
+            }
+/* fit the experiment canvas inside the browser viewport. */
+html, body {
+    margin: 0;
+    overflow: hidden;
+}
+
+        #jspsych-content {
+            display: flow-root;
+            position: relative;
+            width: var(--canvas-width);
+            max-width: var(--canvas-width);
+            min-height: var(--canvas-height);
+            margin: 0 auto;
+        }
+/* imgs on test trials should retain the same dimensions used in CHS. */
+#jspsych-content.trial-button-position {
+    --canvas-width: clamp(810px, calc(100vw - 16px), 1100px);
+    min-height: 0;
+}
+.tiger-screen {
+    display: block;
+    width: var(--tiger-screen-width);
+    height: auto;
+    margin: 0 auto 30px;
+}
+.trial-layout {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: 156px auto;
+    justify-items: center;
+    gap: 10px 20px;
+    padding-top: 8px;
+    text-align: center;
+}
+.main-character {
+    grid-column: 1 / -1;
+    width: var(--side-character-size);
+    height: 156px;
+    object-fit: contain;
+}
+.stim-container {
+    position: relative;
+}
+.stim-rect,
+.side-character-img {
+    display: block;
+    width: auto;
+    height: auto;
+    margin: 0 auto;
+}
+.stim-rect {
+    width: 375px;
+    height: 575px;
+}
+.side-character-container {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 170px;
+    height: 165px;
+    margin: 0 auto;
+}
+.side-character-img {
+    pointer-events: none;
+}
+#jspsych-content.trial-button-position #jspsych-html-button-response-btngroup {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.trial-button-position .jspsych-html-button-response-button {
+    position: absolute;
+    margin: 0 !important;
+}
+.side-character-btn {
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+}
+.stim-container.pulse-highlight {
+    animation: yellowPulse 0.85s ease-in-out 1;
+}
+@keyframes yellowPulse {
+    0% {
+        box-shadow: 0 0 0 rgba(255, 230, 0, 0);
+    }
+50% {
+    box-shadow: 0 0 35px 12px rgba(255, 230, 0, 0.9);
+}
+100% {
+    box-shadow: 0 0 0 rgba(255, 230, 0, 0);
+}
+}
+/* instruction trials */
+.instr-layout {
+    position: relative;
+    width: var(--canvas-width);
+    height: var(--canvas-height);
+    margin: 0 auto;
+    text-align: center;
+}
+.instr-main-character {
+    position: absolute;
+    top: var(--instr-mc-top);
+    right: var(--instr-mc-right);
+    width: var(--mc-width);
+    height: auto;
+}
+.instr-text {
+    position: absolute;
+    top: var(--instr-text-top);
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: var(--instr-text-width);
+    text-align: center;
+}
+.instr-video {
+    width: var(--instr-video-width);
+    height: var(--instr-video-height);
+}
+.instr-stim-container {
+    position: absolute;
+    top: var(--instr-stim-top);
+    left: 50%;
+    width: var(--instr-stim-size);
+    height: var(--instr-stim-size);
+    transform: translateX(-50%);
+}
+.instr-stim-img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+}
+.instr-side-character {
+    display: block;
+    width: var(--side-character-size);
+    height: var(--side-character-size);
+    margin: 12px auto 0 auto;
+    pointer-events: none;
+}
+.subset-button-position #jspsych-html-button-response-btngroup {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: var(--instr-button-gap);
+    margin-top: -60px;
+}
+.subset-circle-button {
+    width: 175px;
+    height: 175px;
+    border: 3px solid black;
+    border-radius: 50%;
+    cursor: pointer;
+}
+.subset-button-position
+.jspsych-html-button-response-button:nth-child(1)
+.subset-circle-button {
+    background-color: orange;
+}
+.subset-button-position
+.jspsych-html-button-response-button:nth-child(2)
+.subset-circle-button {
+    background-color: dodgerblue;
+}
+.subset-circle-button:hover {
+    transform: scale(1.05);
+}
+/* probability instruction trials */
+.prob-instr-text {
+    position: absolute;
+    top: var(--prob-instr-text-top);
+    left: 50%;
+    transform: translateX(-50%);
+    width: var(--instr-text-width);
+    text-align: center;
+}
+.prob-instr-main-character {
+    position: absolute;
+    top: var(--prob-mc-top);
+    right: var(--prob-mc-right);
+    width: var(--mc-width);
+    height: auto;
+}
+.prob-instr-side-character {
+    display: block;
+    width: var(--side-character-size);
+    height: var(--side-character-size);
+    margin: 7px auto 0 auto;
+    pointer-events: none;
+}
+.prob-instr-helper {
+    margin-top: 8px;
+    font-size: 20px;
+    line-height: 1.4;
+}
+.yes-no-button-position #jspsych-html-button-response-btngroup {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: var(--instr-button-gap);
+    margin-top: -80px;
+}
+.probability-face-button {
+    position: relative;
+    z-index: 11;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+.probability-face-img {
+    width: var(--probability-face-size);
+    height: var(--probability-face-size);
+    object-fit: contain;
+    pointer-events: none;
+}
+.yes-no-button-position
+.jspsych-html-button-response-button:nth-child(1)
+.probability-face-img {
+    content: url("img/probability_instructions/happy_face.png");
+}
+.yes-no-button-position
+.jspsych-html-button-response-button:nth-child(2)
+.probability-face-img {
+    content: url("img/probability_instructions/sad_face.png");
+}
+.probability-face-button:hover {
+    transform: scale(1.05);
+}
+/* party transitions */
+.party-transition-layout {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: black;
+    z-index: 9999;
+}
+.party-transition-video {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    background: black;
+}
+/* locking audios */
+.audio-locked #jspsych-instructions-next,
+.audio-locked #jspsych-html-button-response-btngroup button {
+    pointer-events: none;
+    opacity: 0.5;
+}
+.audio-locked #jspsych-html-button-response-btngroup,
+.audio-locked #jspsych-html-button-response-btngroup .jspsych-html-button-response-button,
+.audio-locked #jspsych-html-button-response-btngroup button {
+    pointer-events: none !important;
+}
+    .child-next-btn {
+        min-width: 180px;
+        min-height: 65px;
+        font-size: 26px;
+        font-weight: bold;
+    }
+    #jspsych-content:has(.party-transition-layout) #jspsych-html-button-response-btngroup {
+        position: fixed;
+        right: 35px;
+        bottom: 30px;
+        z-index: 10000;
+    }
+    .party-introduction-arrow {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        cursor: pointer;
+    }
+    .party-introduction-arrow svg {
+        display: block;
+        width: min(160px, 25vw, 25vh);
+        height: auto;
+        filter: drop-shadow(0 2px 5px black);
+        pointer-events: none;
+    }
